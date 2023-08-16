@@ -1,4 +1,5 @@
 base64
 pandas
 plotly
+plotly-express
 streamlit
