@@ -6,23 +6,17 @@ This script analyzes the Diskmon.LOG file to provide insights and statistics abo
 
 Author:   b g e n e t o @ g m a i l . c o m
 History:  v1.0.0 Initial release
-          v1.0.1 Added
+          v1.0.1 ?
 
 Usage:
     $ streamlit run diskmon-log-analyzer.py
 """
 
 import base64
-import bz2
-import gzip
-import time
 
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
-import plotly.offline as pyo
 import streamlit as st
-from tabulate import tabulate
 
 diskmon = """
 DiskMon is an application that logs and displays all hard disk activity on a Windows system.
