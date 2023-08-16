@@ -12,7 +12,7 @@ The application is easy to use. Simply upload your DiskMon log file to the appli
 
 ## How to use the application
 
-1. Navigate to [](https://download.sysinternals.com/files/DiskMon.zip)
+1. Navigate to the [DiskMon Log Analyzer HomePage](https://diskmon-log-visualizer.streamlit.app)
 2. Upload your DiskMon log file to the application.
 3. The application will automatically analyze the data and generate the results.
 4. Explore the results by clicking on the various charts and tables.
