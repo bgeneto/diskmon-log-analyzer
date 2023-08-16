@@ -7,7 +7,7 @@ This script analyzes the Diskmon.LOG file to provide insights and statistics abo
 Author:   b g e n e t o @ g m a i l . c o m
 History:  v1.0.0 Initial release
           v1.0.1 ?
-
+Modified: 20230816
 Usage:
     $ streamlit run diskmon-log-analyzer.py
 """
@@ -282,6 +282,12 @@ def plot_summary(data: pd.DataFrame):
     st.plotly_chart(fig, use_container_width=True)
 
     with st.expander("Show data"):
+        st.write(
+            '> **Note:** The percentage displayed on this chart is distinct from the "Total percent read" and "Total percent write" indicated in '
+            + "the summary table above. This distinction arises because the table presents the percentage of requests, whereas the chart illustrates "
+            + "the percentage of data. Because the length of each request can vary, numerous (small) requests may lead to a higher number of requests "
+            + "but lower amount of data being read or written."
+        )
         st.dataframe(df)
 
     # RND and SEQ requested data by request type per disk
