@@ -251,6 +251,12 @@ def plot_summary(data: pd.DataFrame):
 
     with st.expander("Show data"):
         st.dataframe(df)
+        st.write(
+            '> **Note:** The percentage displayed on this chart is distinct from the "Total percent read" and "Total percent write" indicated in '
+            + "the summary table above. This distinction arises because the table presents the percentage of requests, whereas the chart illustrates "
+            + "the percentage of data. Because the length of each request can vary, numerous (small) requests may lead to a higher number of requests "
+            + "but lower amount of data being read or written."
+        )
 
     # RND and SEQ requested data size in GB
     # --------------------------------------
@@ -282,12 +288,6 @@ def plot_summary(data: pd.DataFrame):
     st.plotly_chart(fig, use_container_width=True)
 
     with st.expander("Show data"):
-        st.write(
-            '> **Note:** The percentage displayed on this chart is distinct from the "Total percent read" and "Total percent write" indicated in '
-            + "the summary table above. This distinction arises because the table presents the percentage of requests, whereas the chart illustrates "
-            + "the percentage of data. Because the length of each request can vary, numerous (small) requests may lead to a higher number of requests "
-            + "but lower amount of data being read or written."
-        )
         st.dataframe(df)
 
     # RND and SEQ requested data by request type per disk
