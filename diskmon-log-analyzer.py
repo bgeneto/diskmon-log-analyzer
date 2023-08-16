@@ -52,7 +52,7 @@ pandas_svg = """
 """
 
 usage = """
-Just run "Diskmon64.exe" ([link](https://download.sysinternals.com/files/DiskMon.zip)) and let it monitor your disk activity for a while.
+Just run `Diskmon64.exe` ([link](https://download.sysinternals.com/files/DiskMon.zip)) and let it monitor your disk activity for a while.
 Once you are done tracing the I/O activity you want, save the log file, compress it (optional)
 and upload it to this page. The page script &mdash; written in Python{python_svg}using Pandas{pandas_svg} &mdash; will analyze the log file and
 provide you with the results.
