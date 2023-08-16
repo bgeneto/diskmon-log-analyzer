@@ -20,8 +20,8 @@ The application is easy to use. Simply upload your DiskMon log file to the appli
 
 ## Results 
 
-The following is just an example of the results that the application can generate. 
-(graphical results not shown)
+The following is just a small example of the results that the application can generate. 
+(many more graphical results are available in the webapp)
 
 |                       | Value      |
 | --------------------- | :--------- |
@@ -43,6 +43,8 @@ The following is just an example of the results that the application can generat
 | Avg. write request    | 33.2 KB    |
 | Max. write request    | 2176 KB    |
 
+
+![image](https://github.com/bgeneto/diskmon-log-analyzer/assets/473074/cec43aeb-7fe1-4fbd-98a0-ed0d5d61dcad)
 
 ## Contact
 
