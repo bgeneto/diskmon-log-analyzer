@@ -6,11 +6,13 @@ This script analyzes the Diskmon.LOG file to provide insights and statistics abo
 
 Author:   b g e n e t o @ g m a i l . c o m
 History:  v1.0.0 Initial release
-          v1.0.1 ?
+          v1.0.1 Changed column names and added percent to the 'Number of Requests by Size' chart.
 Modified: 20230816
 Usage:
     $ streamlit run diskmon-log-analyzer.py
 """
+
+__VERSION__ = "1.0.1"
 
 import base64
 
@@ -18,19 +20,21 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-diskmon = """
+about = """
 DiskMon is an application that logs and displays all hard disk activity on a Windows system.
 For more information, please check [this page](https://learn.microsoft.com/en-us/sysinternals/downloads/diskmon).
 
 You can download DiskMon executable from [here](https://download.sysinternals.com/files/DiskMon.zip).
 """
 
-summary = """
+summary = f"""
 This page enables you to determine the actual percentage of random reading or writing,
 identify the most frequently requested block size, calculate the average access time to files,
 and assess various other factors. These factors are valuable for detecting performance issues
 related to the disk I/O. Additionally, they assist in selecting the optimal SSD for your machine based
 on your own usage pattern instead of relying solely in generic benchmarks results.
+
+Version {__VERSION__} made with [Streamlit](https://streamlit.io/) with ❤️ by [bgeneto](https://github.com/bgeneto/).
 """
 
 python_svg = """
@@ -137,43 +141,41 @@ def log_summary(data: pd.DataFrame) -> pd.DataFrame:
     log_summary = {}
 
     # Compute the total monitoring time by taking the max value from the "Time" column
-    log_summary["Total monitoring time"] = "{:.2g} minutes".format(
-        data["Time"].iloc[-1] / 60
-    )
+    log_summary["Monitoring time"] = "{:.2g} minutes".format(data["Time"].iloc[-1] / 60)
 
     # For example, let's calculate the average time for each operation (not accurate because duration is not always available)
     # totals["Average access time"] = "{:.2g} ms".format(data["Duration (ms)"].mean())
 
     # total read and write requests
-    log_summary["Total read requests"] = data[data["Request"] == "Read"].shape[0]
-    log_summary["Total write requests"] = data[data["Request"] == "Write"].shape[0]
+    log_summary["Read requests"] = data[data["Request"] == "Read"].shape[0]
+    log_summary["Write requests"] = data[data["Request"] == "Write"].shape[0]
 
     # total requests
     log_summary["Total requests"] = data.shape[0]
 
     # total percentage of read and write requests
-    log_summary["Total percent read"] = "{:.2f}%".format(
-        log_summary["Total read requests"] / log_summary["Total requests"] * 100
+    log_summary["Percent READ"] = "{:.2f}%".format(
+        log_summary["Read requests"] / log_summary["Total requests"] * 100
     )
-    log_summary["Total percent write"] = "{:.2f}%".format(
-        log_summary["Total write requests"] / log_summary["Total requests"] * 100
+    log_summary["Percent WRITE"] = "{:.2f}%".format(
+        log_summary["Write requests"] / log_summary["Total requests"] * 100
     )
 
     # total percentage SEQ and RND requests
-    log_summary["Total RND requests"] = "{:.2f}%".format(
+    log_summary["Percent RANDOM"] = "{:.2f}%".format(
         data[data["Type"] == "RND"].shape[0] / log_summary["Total requests"] * 100
     )
-    log_summary["Total SEQ requests"] = "{:.2f}%".format(
+    log_summary["Percent SEQUENTIAL"] = "{:.2f}%".format(
         data[data["Type"] == "SEQ"].shape[0] / log_summary["Total requests"] * 100
     )
 
     # total data read in Gbytes
-    log_summary["Total data read"] = "{:.2f} GB".format(
+    log_summary["Read data size"] = "{:.2f} GB".format(
         sector_size * data[data["Request"] == "Read"]["Length"].sum() / toGB
     )
 
     # total data written in Gbytes
-    log_summary["Total data write"] = "{:.2f} GB".format(
+    log_summary["Write data size"] = "{:.2f} GB".format(
         sector_size * data[data["Request"] == "Write"]["Length"].sum() / toGB
     )
 
@@ -183,12 +185,12 @@ def log_summary(data: pd.DataFrame) -> pd.DataFrame:
     )
 
     # min and max readrequests in KB
-    log_summary["Min. read request"] = "{:.1f} KB".format(
+    log_summary["Min. read request size"] = "{:.1f} KB".format(
         sector_size * data[data["Request"] == "Read"]["Length"].min() / toKB
     )
 
     # avg read request in KB
-    log_summary["Avg. read request"] = "{:.1f} KB".format(
+    log_summary["Avg. read request size"] = "{:.1f} KB".format(
         sector_size * data[data["Request"] == "Read"]["Length"].mean() / toKB
     )
 
@@ -197,15 +199,15 @@ def log_summary(data: pd.DataFrame) -> pd.DataFrame:
     formatted_number = (
         "{:.1f}".format(number) if number % 1 else "{:.0f}".format(number)
     )
-    log_summary["Max. read request"] = formatted_number + " KB"
+    log_summary["Max. read request size"] = formatted_number + " KB"
 
     # min and max write requests in KB
-    log_summary["Min. write request"] = "{:.1f} KB".format(
+    log_summary["Min. write request size"] = "{:.1f} KB".format(
         sector_size * data[data["Request"] == "Write"]["Length"].min() / toKB
     )
 
     # avg write request in KB
-    log_summary["Avg. write request"] = "{:.1f} KB".format(
+    log_summary["Avg. write request size"] = "{:.1f} KB".format(
         sector_size * data[data["Request"] == "Write"]["Length"].mean() / toKB
     )
 
@@ -214,7 +216,7 @@ def log_summary(data: pd.DataFrame) -> pd.DataFrame:
     formatted_number = (
         "{:.1f}".format(number) if number % 1 else "{:.0f}".format(number)
     )
-    log_summary["Max. write request"] = formatted_number + " KB"
+    log_summary["Max. write request size"] = formatted_number + " KB"
 
     return pd.DataFrame.from_dict(log_summary, orient="index", columns=["Value"])
 
@@ -231,13 +233,13 @@ def plot_summary(data: pd.DataFrame):
     # Calculate percentage within each disk group
     df["Percent"] = df["Length"] / df.groupby("Disks")["Length"].transform("sum") * 100
 
-    df.rename(columns={"Length": "Length (GB)"}, inplace=True)
+    df.rename(columns={"Length": "Size (GB)"}, inplace=True)
 
     # Create a plotly bar chart
     fig = px.bar(
         df,
         x="Disks",
-        y="Length (GB)",
+        y="Size (GB)",
         title="Total Requested Data Size",
         color="Request",
         barmode="group",
@@ -252,9 +254,9 @@ def plot_summary(data: pd.DataFrame):
     with st.expander("Show data"):
         st.dataframe(df)
         st.write(
-            '> **Note:** The percentage displayed on this chart is distinct from the "Total percent read" and "Total percent write" indicated in '
+            '> **Note:** The percentage displayed on this chart is distinct from the "Percent READ" and "Percent WRITE" indicated in '
             + "the summary table above. This distinction arises because the table presents the percentage of requests, whereas the chart illustrates "
-            + "the percentage of data. Because the length of each request can vary, numerous (small) requests may lead to a higher number of requests "
+            + "the percentage of data size. Because the length (in sectors) of each request can vary, numerous (small length) requests may lead to a higher number of requests "
             + "but lower amount of data being read or written."
         )
 
@@ -269,13 +271,13 @@ def plot_summary(data: pd.DataFrame):
     # Calculate percentage within each disk group
     df["Percent"] = df["Length"] / df.groupby("Disks")["Length"].transform("sum") * 100
 
-    df.rename(columns={"Length": "Length (GB)"}, inplace=True)
+    df.rename(columns={"Length": "Size (GB)"}, inplace=True)
 
     # Create a plotly bar chart
     fig = px.bar(
         df,
         x="Disks",
-        y="Length (GB)",
+        y="Size (GB)",
         title="Data Size by Access Type (Random/Sequential)",
         color="Type",
         barmode="group",
@@ -311,13 +313,13 @@ def plot_summary(data: pd.DataFrame):
             df["Length"] / df.groupby("Type")["Length"].transform("sum") * 100
         )
 
-        df.rename(columns={"Length": "Length (GB)"}, inplace=True)
+        df.rename(columns={"Length": "Size (GB)"}, inplace=True)
 
         # Create a plotly bar chart
         fig = px.bar(
             df,
             x="Type",
-            y="Length (GB)",
+            y="Size (GB)",
             title=f"Access Type (RND/SEQ) by Request Type (R/W) - {disk_name}",
             color="Request",
             barmode="group",
@@ -418,16 +420,16 @@ def show_request_size(data: pd.DataFrame):
     )
 
     # rename the columns
-    df.rename(columns={"Length": "Avg. Length (KB)"}, inplace=True)
+    df.rename(columns={"Length": "Avg. Size (KB)"}, inplace=True)
 
     # Create Plotly bar plot
     fig = px.bar(
         df,
         x="Disks",
-        y="Avg. Length (KB)",
+        y="Avg. Size (KB)",
         color="Request",
         barmode="group",
-        title="Average Request Length (KB)",
+        title="Average Request Size",
     )
 
     st.plotly_chart(fig, use_container_width=True)
@@ -450,21 +452,26 @@ def show_request_size(data: pd.DataFrame):
 
     for disk_name in length_counts["Disks"].unique():
         df = length_counts[length_counts["Disks"] == disk_name]
-        df["Request Length (KB)"] = (df["Length"] * sector_size / toKB).astype(int)
+        df["Request Size (KB)"] = (df["Length"] * sector_size / toKB).astype(int)
         df.drop(["Disks", "Length"], axis=1, inplace=True)
-        # Create Plotly bar plot
+        # Calculate percentage within each request group
+        df["Percent"] = df["count"] / df.groupby("Request")["count"].transform("sum") * 100
+        # Create the plot
         fig = px.bar(
             df,
-            x="Request Length (KB)",
+            x="Request Size (KB)",
             y="count",
             color="Request",
             barmode="group",
-            title=f"Request Length Count - {disk_name}",
-            custom_data=["Request", "count"],
+            title=f"Number of Requests by Size - {disk_name}",
+            text="Percent",
+            custom_data=["Request", "Percent"],
         )
+        # Annotate the bars with percentage values
         fig.update_xaxes(type="category")
         fig.update_traces(
-            hovertemplate="Size: %{x}KB<br>Count: %{y}<br>Type: %{customdata[0]}<extra></extra>"
+            texttemplate="%{text:.3s}%", textposition="inside",
+            hovertemplate="Size: %{x}KB<br>Count: %{y}<br>Type: %{customdata[0]}<br>Percent: %{customdata[1]:.1f}%<extra></extra>"
         )
         st.plotly_chart(fig, use_container_width=True)
         with st.expander("Show data"):
@@ -485,7 +492,7 @@ def main():
 
     with st.expander("About DiskMon"):
         st.header("About DiskMon")
-        st.write(diskmon)
+        st.write(about)
 
     with st.expander("About this page"):
         st.header("About this page")
@@ -559,7 +566,7 @@ def main():
         st.write(
             """
             The requested size is the amount of data requested by an application when reading/writing from/to a file.
-            It is the product of the number of sectors requested (the Length column) and the sector size (always 512 bytes in DiskMon).
+            It is the product of the number of sectors requested (Length column) and the sector size (always 512 bytes in DiskMon).
 
             The most important SSD performance metric for you will depend on your usage pattern.
             The charts below show the average request size and the number of requests for each size.
