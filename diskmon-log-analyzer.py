@@ -141,10 +141,7 @@ def log_summary(data: pd.DataFrame) -> pd.DataFrame:
     log_summary = {}
 
     # Compute the total monitoring time by taking the max value from the "Time" column
-    log_summary["Monitoring time"] = "{:.2g} minutes".format(data["Time"].iloc[-1] / 60)
-
-    # For example, let's calculate the average time for each operation (not accurate because duration is not always available)
-    # totals["Average access time"] = "{:.2g} ms".format(data["Duration (ms)"].mean())
+    log_summary["Monitoring time"] = "{:.2f} minutes".format(data["Time"].iloc[-1] / 60)
 
     # total read and write requests
     log_summary["Read requests"] = data[data["Request"] == "Read"].shape[0]
@@ -451,11 +448,13 @@ def show_request_size(data: pd.DataFrame):
     )
 
     for disk_name in length_counts["Disks"].unique():
-        df = length_counts[length_counts["Disks"] == disk_name]
+        df = length_counts[length_counts["Disks"] == disk_name].copy()
         df["Request Size (KB)"] = (df["Length"] * sector_size / toKB).astype(int)
         df.drop(["Disks", "Length"], axis=1, inplace=True)
         # Calculate percentage within each request group
-        df["Percent"] = df["count"] / df.groupby("Request")["count"].transform("sum") * 100
+        df["Percent"] = (
+            df["count"] / df.groupby("Request")["count"].transform("sum") * 100
+        )
         # Create the plot
         fig = px.bar(
             df,
@@ -470,8 +469,9 @@ def show_request_size(data: pd.DataFrame):
         # Annotate the bars with percentage values
         fig.update_xaxes(type="category")
         fig.update_traces(
-            texttemplate="%{text:.3s}%", textposition="inside",
-            hovertemplate="Size: %{x}KB<br>Count: %{y}<br>Type: %{customdata[0]}<br>Percent: %{customdata[1]:.1f}%<extra></extra>"
+            texttemplate="%{text:.3s}%",
+            textposition="inside",
+            hovertemplate="Size: %{x}KB<br>Count: %{y}<br>Type: %{customdata[0]}<br>Percent: %{customdata[1]:.1f}%<extra></extra>",
         )
         st.plotly_chart(fig, use_container_width=True)
         with st.expander("Show data"):
